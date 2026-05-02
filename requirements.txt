@@ -1,0 +1,14 @@
+# Web framework and admin UI
+Django>=6.0,<7.0
+django-jazzmin>=3.0,<4.0
+gunicorn>=23.0,<24.0
+
+# PostgreSQL driver
+psycopg[binary]>=3.2,<4.0
+
+# Background jobs and scheduled refreshes
+celery>=5.4,<6.0
+websocket-client>=1.8,<2.0
+
+# Time zone database, required on Windows and useful in slim environments
+tzdata>=2025.2

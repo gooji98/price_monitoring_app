@@ -1,0 +1,82 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "1"
+      RUN_COLLECTSTATIC: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - static_volume:/app/staticfiles
+      - celery_data:/app/.celery
+
+  celery_worker:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "0"
+      RUN_COLLECTSTATIC: "0"
+    command: celery -A price_monitor worker --loglevel=info
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    volumes:
+      - celery_data:/app/.celery
+
+  celery_beat:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "0"
+      RUN_COLLECTSTATIC: "0"
+    command: celery -A price_monitor beat --loglevel=info --schedule=/app/.celery/celerybeat-schedule
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    volumes:
+      - celery_data:/app/.celery
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    depends_on:
+      - web
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles:ro
+
+volumes:
+  postgres_data:
+  static_volume:
+  celery_data:

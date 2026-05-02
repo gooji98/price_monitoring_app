@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Price Monitoring</title>
+    <link rel="stylesheet" href="{% static 'marketwatch/styles.css' %}">
+    <script defer src="{% static 'marketwatch/app.js' %}"></script>
+</head>
+<body data-poll-interval="{{ poll_interval }}">
+    <main class="shell">
+        <header class="topbar">
+            <div>
+                <h1>Price Monitoring</h1>
+            </div>
+            <div class="toolbar">
+                <div class="filters" aria-label="Filters">
+                    <input id="symbol-filter" type="search" placeholder="Filter symbol">
+                    <select id="status-filter">
+                        <option value="all">All statuses</option>
+                        <option value="normal">Normal</option>
+                        <option value="warning">Warning</option>
+                        <option value="danger">Danger</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <button id="fullscreen-toggle" class="icon-button" type="button" title="Fullscreen" aria-label="Fullscreen">
+                    Full
+                </button>
+            </div>
+        </header>
+
+        <section id="cards" class="cards" aria-live="polite"></section>
+    </main>
+</body>
+</html>
