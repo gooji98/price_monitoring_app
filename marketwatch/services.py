@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone as datetime_timezone, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from time import perf_counter, sleep
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -277,11 +277,21 @@ def _extract(exchange, symbol, raw_results):
 def _normalize_reference(symbol, reference_key, wallex, reference):
     if reference.price is None:
         return reference
+    if reference_key == "bitbank" and _is_fiat_symbol(symbol):
+        return TradePrice(_integer_toman(reference.price / Decimal("10")), reference.timestamp, reference.latency_ms)
     if reference_key == "nobitex" and symbol.endswith(("TMN", "IRR")):
         return TradePrice(reference.price / Decimal("10"), reference.timestamp, reference.latency_ms)
     if reference_key == "nobitex" and symbol.endswith("USDT") and symbol != "USDTTMN":
         return TradePrice(reference.price / Decimal("10"), reference.timestamp, reference.latency_ms)
     return reference
+
+
+def _is_fiat_symbol(symbol):
+    return symbol.endswith(("TMN", "IRT", "IRR"))
+
+
+def _integer_toman(value):
+    return value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
 
 def _bitbank_latest_trade(trades):
