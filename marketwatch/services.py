@@ -389,9 +389,13 @@ def _bitbank_spread_status(spread_percent, card):
     if spread_percent is None or not _is_bitbank_source(card):
         return "normal"
     threshold = abs(card.spread_threshold_percent or Decimal("0"))
-    if threshold == 0:
+    fast_threshold = abs(card.spread_fast_threshold_percent or Decimal("0"))
+    if threshold == 0 and fast_threshold == 0:
         return "normal"
-    return "spread-alert" if abs(spread_percent) >= threshold else "normal"
+    absolute_spread = abs(spread_percent)
+    if fast_threshold and absolute_spread >= max(threshold, fast_threshold):
+        return "spread-danger"
+    return "spread-alert" if threshold and absolute_spread >= threshold else "normal"
 
 
 def _display_status(gap_status, bitbank_spread_status):

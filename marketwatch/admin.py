@@ -25,9 +25,10 @@ class MonitorCardAdmin(admin.ModelAdmin):
         "display_order",
         "normal_color",
         "spread_threshold_percent",
+        "spread_fast_threshold_percent",
         "spread_alert_color",
     )
-    list_editable = ("show_on_monitor", "display_order", "normal_color", "spread_threshold_percent", "spread_alert_color")
+    list_editable = ("show_on_monitor", "display_order", "normal_color", "spread_threshold_percent", "spread_fast_threshold_percent", "spread_alert_color")
     list_filter = ("show_on_monitor", "reference_exchange", "compare_exchange", "normal_color", "spread_alert_color")
     search_fields = ("symbol",)
     inlines = [ThresholdRuleInline]
@@ -50,6 +51,7 @@ class MonitorCardAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "spread_threshold_percent",
+                    "spread_fast_threshold_percent",
                     "spread_alert_color",
                     "spread_siren_enabled",
                 ),

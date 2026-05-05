@@ -378,17 +378,28 @@ h1 {
   --spread-light-rgb: 255, 95, 87;
 }
 
-.price-card.spread-alert {
+.price-card.spread-alert,
+.price-card.spread-danger {
   border-color: var(--spread-border, rgba(155, 92, 255, 0.86));
   background: var(--spread-background);
 }
 
-.price-card.spread-alert.siren {
+.price-card.spread-alert.siren,
+.price-card.spread-danger.siren {
   animation: spread-siren 620ms steps(2, end) infinite;
 }
 
-.price-card.spread-alert.siren .pulse {
+.price-card.spread-alert.siren .pulse,
+.price-card.spread-danger.siren .pulse {
   animation: spread-siren-pulse 620ms steps(2, end) infinite;
+}
+
+.price-card.spread-danger.siren {
+  animation-duration: 260ms;
+}
+
+.price-card.spread-danger.siren .pulse {
+  animation-duration: 260ms;
 }
 
 @keyframes spread-siren {

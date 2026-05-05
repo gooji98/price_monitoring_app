@@ -39,6 +39,13 @@ class MonitorCard(models.Model):
         default=Decimal("0.2"),
         help_text="Only applies when the source exchange is Bitbank.",
     )
+    spread_fast_threshold_percent = models.DecimalField(
+        "Bitbank fast spread threshold (%)",
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal("0.5"),
+        help_text="When spread passes this level, the Bitbank spread siren runs faster.",
+    )
     spread_alert_color = models.CharField(
         "Bitbank spread alert color",
         max_length=16,
