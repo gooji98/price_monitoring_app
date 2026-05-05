@@ -306,8 +306,6 @@ h1 {
     linear-gradient(145deg, rgba(104, 35, 168, 0.95), rgba(54, 17, 93, 0.76)),
     var(--panel);
   --spread-border: rgba(155, 92, 255, 0.86);
-  --card-light: var(--purple);
-  --card-light-rgb: 155, 92, 255;
   --spread-light: var(--purple);
   --spread-light-rgb: 155, 92, 255;
 }
@@ -317,8 +315,6 @@ h1 {
     linear-gradient(145deg, rgba(157, 34, 126, 0.94), rgba(83, 15, 65, 0.76)),
     var(--panel);
   --spread-border: rgba(255, 79, 216, 0.86);
-  --card-light: var(--magenta);
-  --card-light-rgb: 255, 79, 216;
   --spread-light: var(--magenta);
   --spread-light-rgb: 255, 79, 216;
 }
@@ -328,8 +324,6 @@ h1 {
     linear-gradient(145deg, rgba(18, 104, 40, 0.92), rgba(8, 56, 24, 0.72)),
     var(--panel);
   --spread-border: rgba(94, 240, 112, 0.8);
-  --card-light: var(--green);
-  --card-light-rgb: 94, 240, 112;
   --spread-light: var(--green);
   --spread-light-rgb: 94, 240, 112;
 }
@@ -339,8 +333,6 @@ h1 {
     linear-gradient(145deg, rgba(20, 84, 136, 0.92), rgba(10, 44, 79, 0.72)),
     var(--panel);
   --spread-border: rgba(83, 183, 255, 0.82);
-  --card-light: var(--blue);
-  --card-light-rgb: 83, 183, 255;
   --spread-light: var(--blue);
   --spread-light-rgb: 83, 183, 255;
 }
@@ -350,8 +342,6 @@ h1 {
     linear-gradient(145deg, rgba(69, 82, 88, 0.92), rgba(36, 45, 49, 0.72)),
     var(--panel);
   --spread-border: rgba(198, 210, 216, 0.62);
-  --card-light: var(--gray);
-  --card-light-rgb: 198, 210, 216;
   --spread-light: var(--gray);
   --spread-light-rgb: 198, 210, 216;
 }
@@ -361,8 +351,6 @@ h1 {
     linear-gradient(145deg, rgba(130, 101, 34, 0.92), rgba(71, 55, 20, 0.72)),
     var(--panel);
   --spread-border: rgba(247, 200, 95, 0.82);
-  --card-light: var(--gold);
-  --card-light-rgb: 247, 200, 95;
   --spread-light: var(--gold);
   --spread-light-rgb: 247, 200, 95;
 }
@@ -372,8 +360,6 @@ h1 {
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
     var(--panel);
   --spread-border: rgba(255, 95, 87, 0.82);
-  --card-light: var(--red);
-  --card-light-rgb: 255, 95, 87;
   --spread-light: var(--red);
   --spread-light-rgb: 255, 95, 87;
 }
