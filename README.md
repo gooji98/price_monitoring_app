@@ -12,7 +12,7 @@ PostgreSQL is configured through `.env`:
 ```env
 DB_NAME=price_monitoring_board
 DB_USER=postgres
-DB_PASSWORD=22573312
+DB_PASSWORD=....
 DB_HOST=localhost
 DB_PORT=5432
 ```
