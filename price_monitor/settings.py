@@ -134,7 +134,10 @@ PRICE_MONITOR = {
     "BITBANK_WS_TIMEOUT_SECONDS": max(1, int(os.environ.get("BITBANK_WS_TIMEOUT_SECONDS", "8"))),
 }
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
+REDIS_DB = os.environ.get("REDIS_DB", "0")
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}")
 if CELERY_BROKER_URL.startswith("filesystem://"):
     CELERY_DIR = BASE_DIR / ".celery"
     CELERY_DIR.mkdir(exist_ok=True)
