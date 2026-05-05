@@ -5,6 +5,7 @@ const fullscreenToggle = document.querySelector("#fullscreen-toggle");
 
 let pollSeconds = Number(document.body.dataset.pollInterval || 5);
 let timerId = null;
+let sirenTimerId = null;
 let latestRows = [];
 const orderStorageKey = "price-monitor-card-order";
 const sirenDurations = {
@@ -41,7 +42,6 @@ function scheduleNext(delay) {
 }
 
 function renderCards(rows) {
-  syncSirenPhase();
   const filteredRows = applyFilters(applySavedOrder(rows));
   cards.innerHTML = filteredRows.map((row) => {
     const isError = row.errors && row.errors.length;
@@ -88,18 +88,24 @@ function renderCards(rows) {
   }
 
   bindDragAndDrop();
+  syncSirenLoop();
 }
 
-function syncSirenPhase() {
+function syncSirenLoop() {
+  if (sirenTimerId !== null) return;
+  updateSirenState();
+  sirenTimerId = setInterval(updateSirenState, 80);
+}
+
+function updateSirenState() {
   const now = Date.now();
-  document.documentElement.style.setProperty(
-    "--siren-alert-delay",
-    `-${now % sirenDurations.alert}ms`,
-  );
-  document.documentElement.style.setProperty(
-    "--siren-danger-delay",
-    `-${now % sirenDurations.danger}ms`,
-  );
+  setSirenTone("alert", now % sirenDurations.alert < sirenDurations.alert / 2);
+  setSirenTone("danger", now % sirenDurations.danger < sirenDurations.danger / 2);
+}
+
+function setSirenTone(level, isSpreadTone) {
+  document.body.classList.toggle(`siren-${level}-spread`, isSpreadTone);
+  document.body.classList.toggle(`siren-${level}-gap`, !isSpreadTone);
 }
 
 function applyFilters(rows) {
