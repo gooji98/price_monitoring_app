@@ -421,19 +421,19 @@ h1 {
   100% {
     background:
       radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9), transparent 0.22rem),
-      var(--spread-light);
+      var(--gap-light);
     box-shadow:
-      0 0 0 6px rgba(var(--spread-light-rgb), 0),
-      0 0 25px rgba(var(--spread-light-rgb), 0.86);
+      0 0 0 6px rgba(var(--gap-light-rgb), 0),
+      0 0 25px rgba(var(--gap-light-rgb), 0.86);
   }
 
   50% {
     background:
       radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9), transparent 0.22rem),
-      var(--gap-light);
+      var(--spread-light);
     box-shadow:
-      0 0 0 0 rgba(var(--gap-light-rgb), 0.4),
-      0 0 17px rgba(var(--gap-light-rgb), 0.72);
+      0 0 0 0 rgba(var(--spread-light-rgb), 0.4),
+      0 0 17px rgba(var(--spread-light-rgb), 0.72);
   }
 }
 
