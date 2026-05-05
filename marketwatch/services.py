@@ -231,12 +231,12 @@ def _build_row(card, raw_results, fetched_at):
         "quoteKey": _quote_key(card),
         "displaySymbol": card.display_symbol,
         "sourceExchange": source_exchange,
-        "wallexPrice": _decimal_to_str(source.price),
-        "referencePrice": _decimal_to_str(reference.price),
+        "wallexPrice": _card_decimal_to_str(card, source.price),
+        "referencePrice": _card_decimal_to_str(card, reference.price),
         "referenceExchange": reference_exchange,
         "normalColor": card.normal_color,
         "spreadPercent": _decimal_to_str(spread, places=4),
-        "spreadAbs": _decimal_to_str(spread_abs),
+        "spreadAbs": _card_decimal_to_str(card, spread_abs),
         "lastTradeAt": source.timestamp or reference.timestamp,
         "lastSyncedAt": timezone.localtime(fetched_at).isoformat(),
         "status": status,
@@ -292,6 +292,18 @@ def _is_fiat_symbol(symbol):
 
 def _integer_toman(value):
     return value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+
+def _card_outputs_toman(card):
+    return _is_fiat_symbol(card.symbol) or _needs_usdt_tmn_rate(card)
+
+
+def _card_decimal_to_str(card, value):
+    if value is None:
+        return None
+    if _card_outputs_toman(card):
+        value = _integer_toman(value)
+    return _decimal_to_str(value)
 
 
 def _bitbank_latest_trade(trades):
@@ -700,12 +712,12 @@ def _quote_to_row(card, quote):
         "quoteKey": _quote_key(card),
         "displaySymbol": quote.display_symbol,
         "sourceExchange": _source_exchange(card),
-        "wallexPrice": _decimal_to_str(quote.wallex_price),
-        "referencePrice": _decimal_to_str(quote.reference_price),
+        "wallexPrice": _card_decimal_to_str(card, quote.wallex_price),
+        "referencePrice": _card_decimal_to_str(card, quote.reference_price),
         "referenceExchange": quote.reference_exchange,
         "normalColor": card.normal_color,
         "spreadPercent": _decimal_to_str(quote.gap_percent, places=4),
-        "spreadAbs": _decimal_to_str(quote.gap_abs),
+        "spreadAbs": _card_decimal_to_str(card, quote.gap_abs),
         "lastTradeAt": quote.last_trade_at,
         "lastSyncedAt": timezone.localtime(quote.fetched_at).isoformat(),
         "status": _status_for_gap(quote.gap_percent, card) if quote.gap_percent is not None else quote.status,
