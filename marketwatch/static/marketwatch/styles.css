@@ -136,6 +136,10 @@ h1 {
 .price-card {
   --card-light: var(--green);
   --card-light-rgb: 94, 240, 112;
+  --gap-light: var(--green);
+  --gap-light-rgb: 94, 240, 112;
+  --spread-light: var(--purple);
+  --spread-light-rgb: 155, 92, 255;
   --gap-background:
     linear-gradient(145deg, rgba(18, 104, 40, 0.92), rgba(8, 56, 24, 0.72)),
     var(--panel);
@@ -163,6 +167,8 @@ h1 {
 .price-card.normal-blue {
   --card-light: var(--blue);
   --card-light-rgb: 83, 183, 255;
+  --gap-light: var(--blue);
+  --gap-light-rgb: 83, 183, 255;
   --gap-background:
     linear-gradient(145deg, rgba(20, 84, 136, 0.92), rgba(10, 44, 79, 0.72)),
     var(--panel);
@@ -175,6 +181,8 @@ h1 {
 .price-card.normal-gray {
   --card-light: var(--gray);
   --card-light-rgb: 198, 210, 216;
+  --gap-light: var(--gray);
+  --gap-light-rgb: 198, 210, 216;
   --gap-background:
     linear-gradient(145deg, rgba(69, 82, 88, 0.92), rgba(36, 45, 49, 0.72)),
     var(--panel);
@@ -187,6 +195,8 @@ h1 {
 .price-card.normal-yellow {
   --card-light: var(--gold);
   --card-light-rgb: 247, 200, 95;
+  --gap-light: var(--gold);
+  --gap-light-rgb: 247, 200, 95;
   --gap-background:
     linear-gradient(145deg, rgba(130, 101, 34, 0.92), rgba(71, 55, 20, 0.72)),
     var(--panel);
@@ -199,6 +209,8 @@ h1 {
 .price-card.normal-red {
   --card-light: var(--red);
   --card-light-rgb: 255, 95, 87;
+  --gap-light: var(--red);
+  --gap-light-rgb: 255, 95, 87;
   --gap-background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
     var(--panel);
@@ -211,6 +223,8 @@ h1 {
 .price-card.normal-purple {
   --card-light: var(--purple);
   --card-light-rgb: 155, 92, 255;
+  --gap-light: var(--purple);
+  --gap-light-rgb: 155, 92, 255;
   --gap-background:
     linear-gradient(145deg, rgba(104, 35, 168, 0.95), rgba(54, 17, 93, 0.76)),
     var(--panel);
@@ -221,6 +235,8 @@ h1 {
 .price-card.normal-magenta {
   --card-light: var(--magenta);
   --card-light-rgb: 255, 79, 216;
+  --gap-light: var(--magenta);
+  --gap-light-rgb: 255, 79, 216;
   --gap-background:
     linear-gradient(145deg, rgba(157, 34, 126, 0.94), rgba(83, 15, 65, 0.76)),
     var(--panel);
@@ -232,6 +248,8 @@ h1 {
 .price-card.error {
   --card-light: var(--red);
   --card-light-rgb: 255, 95, 87;
+  --gap-light: var(--red);
+  --gap-light-rgb: 255, 95, 87;
   border-color: rgba(255, 95, 87, 0.78);
   background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
@@ -241,6 +259,8 @@ h1 {
 .price-card.warning {
   --card-light: var(--orange);
   --card-light-rgb: 255, 179, 71;
+  --gap-light: var(--orange);
+  --gap-light-rgb: 255, 179, 71;
   --gap-background:
     linear-gradient(145deg, rgba(128, 79, 20, 0.94), rgba(69, 43, 13, 0.78)),
     var(--panel);
@@ -253,6 +273,8 @@ h1 {
 .price-card.danger {
   --card-light: var(--red);
   --card-light-rgb: 255, 95, 87;
+  --gap-light: var(--red);
+  --gap-light-rgb: 255, 95, 87;
   --gap-background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
     var(--panel);
@@ -263,6 +285,8 @@ h1 {
 }
 
 .price-card.gap-warning {
+  --gap-light: var(--orange);
+  --gap-light-rgb: 255, 179, 71;
   --gap-background:
     linear-gradient(145deg, rgba(128, 79, 20, 0.94), rgba(69, 43, 13, 0.78)),
     var(--panel);
@@ -270,6 +294,8 @@ h1 {
 
 .price-card.gap-danger,
 .price-card.gap-error {
+  --gap-light: var(--red);
+  --gap-light-rgb: 255, 95, 87;
   --gap-background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
     var(--panel);
@@ -282,6 +308,8 @@ h1 {
   --spread-border: rgba(155, 92, 255, 0.86);
   --card-light: var(--purple);
   --card-light-rgb: 155, 92, 255;
+  --spread-light: var(--purple);
+  --spread-light-rgb: 155, 92, 255;
 }
 
 .price-card.spread-magenta {
@@ -291,6 +319,8 @@ h1 {
   --spread-border: rgba(255, 79, 216, 0.86);
   --card-light: var(--magenta);
   --card-light-rgb: 255, 79, 216;
+  --spread-light: var(--magenta);
+  --spread-light-rgb: 255, 79, 216;
 }
 
 .price-card.spread-green {
@@ -300,6 +330,8 @@ h1 {
   --spread-border: rgba(94, 240, 112, 0.8);
   --card-light: var(--green);
   --card-light-rgb: 94, 240, 112;
+  --spread-light: var(--green);
+  --spread-light-rgb: 94, 240, 112;
 }
 
 .price-card.spread-blue {
@@ -309,6 +341,8 @@ h1 {
   --spread-border: rgba(83, 183, 255, 0.82);
   --card-light: var(--blue);
   --card-light-rgb: 83, 183, 255;
+  --spread-light: var(--blue);
+  --spread-light-rgb: 83, 183, 255;
 }
 
 .price-card.spread-gray {
@@ -318,6 +352,8 @@ h1 {
   --spread-border: rgba(198, 210, 216, 0.62);
   --card-light: var(--gray);
   --card-light-rgb: 198, 210, 216;
+  --spread-light: var(--gray);
+  --spread-light-rgb: 198, 210, 216;
 }
 
 .price-card.spread-yellow {
@@ -327,6 +363,8 @@ h1 {
   --spread-border: rgba(247, 200, 95, 0.82);
   --card-light: var(--gold);
   --card-light-rgb: 247, 200, 95;
+  --spread-light: var(--gold);
+  --spread-light-rgb: 247, 200, 95;
 }
 
 .price-card.spread-red {
@@ -336,6 +374,8 @@ h1 {
   --spread-border: rgba(255, 95, 87, 0.82);
   --card-light: var(--red);
   --card-light-rgb: 255, 95, 87;
+  --spread-light: var(--red);
+  --spread-light-rgb: 255, 95, 87;
 }
 
 .price-card.spread-alert {
@@ -345,6 +385,10 @@ h1 {
 
 .price-card.spread-alert.siren {
   animation: spread-siren 620ms steps(2, end) infinite;
+}
+
+.price-card.spread-alert.siren .pulse {
+  animation: spread-siren-pulse 620ms steps(2, end) infinite;
 }
 
 @keyframes spread-siren {
@@ -357,6 +401,27 @@ h1 {
   50% {
     background: var(--gap-background);
     border-color: rgba(255, 255, 255, 0.42);
+  }
+}
+
+@keyframes spread-siren-pulse {
+  0%,
+  100% {
+    background:
+      radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9), transparent 0.22rem),
+      var(--spread-light);
+    box-shadow:
+      0 0 0 6px rgba(var(--spread-light-rgb), 0),
+      0 0 25px rgba(var(--spread-light-rgb), 0.86);
+  }
+
+  50% {
+    background:
+      radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9), transparent 0.22rem),
+      var(--gap-light);
+    box-shadow:
+      0 0 0 0 rgba(var(--gap-light-rgb), 0.4),
+      0 0 17px rgba(var(--gap-light-rgb), 0.72);
   }
 }
 

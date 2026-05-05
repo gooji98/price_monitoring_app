@@ -44,8 +44,9 @@ function renderCards(rows) {
     const spreadAbs = row.spreadAbs === null ? "-" : formatNumber(row.spreadAbs);
     const spread = row.spreadPercent === null ? "-" : `${signed(formatPercent(row.spreadPercent))}%`;
     const bitbankSpread = row.bitbankSpreadPercent === null || row.bitbankSpreadPercent === undefined ? "-" : `${formatPercent(row.bitbankSpreadPercent)}%`;
+    const bitbankSpreadAbs = row.bitbankSpreadAbs === null || row.bitbankSpreadAbs === undefined ? "-" : formatNumber(row.bitbankSpreadAbs);
     const spreadLine = row.sourceExchange === "Bitbank"
-      ? `<div><dt>Spread</dt><dd>${bitbankSpread}</dd></div>`
+      ? `<div><dt>Spread %</dt><dd>${bitbankSpread}</dd></div><div><dt>Spread Amount</dt><dd>${bitbankSpreadAbs}</dd></div>`
       : "";
     const sourceLabel = row.sourceExchange || "Wallex";
     const referenceLabel = row.referenceExchange || "-";

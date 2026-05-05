@@ -177,6 +177,7 @@ class MarketQuote(models.Model):
     gap_stddev_percent = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
     gap_abs = models.DecimalField(max_digits=28, decimal_places=12, null=True, blank=True)
     bitbank_spread_percent = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
+    bitbank_spread_abs = models.DecimalField(max_digits=28, decimal_places=12, null=True, blank=True)
     bitbank_spread_status = models.CharField(max_length=16, default="normal")
     bitbank_spread_fetched_at = models.DateTimeField(null=True, blank=True)
     last_trade_at = models.CharField(max_length=64, null=True, blank=True)

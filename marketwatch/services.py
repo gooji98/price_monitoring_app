@@ -235,7 +235,7 @@ def _build_row(card, raw_results, fetched_at):
         _delete_old_gap_samples(fetched_at)
         status = _status_for_gap(spread, card)
 
-    bitbank_spread_percent = _extract_bitbank_spread(symbol, raw_results) if _is_bitbank_source(card) else None
+    bitbank_spread_percent, bitbank_spread_abs = _extract_bitbank_spread_values(symbol, raw_results) if _is_bitbank_source(card) else (None, None)
     bitbank_spread_status = _bitbank_spread_status(bitbank_spread_percent, card)
     display_status = _display_status(status, bitbank_spread_status)
 
@@ -261,6 +261,7 @@ def _build_row(card, raw_results, fetched_at):
         "spreadPercent": _decimal_to_str(spread, places=4),
         "spreadAbs": _card_decimal_to_str(card, spread_abs),
         "bitbankSpreadPercent": _decimal_to_str(bitbank_spread_percent, places=4),
+        "bitbankSpreadAbs": _card_decimal_to_str(card, bitbank_spread_abs),
         "bitbankSpreadStatus": bitbank_spread_status,
         "spreadAlertColor": card.spread_alert_color,
         "spreadSirenEnabled": card.spread_siren_enabled,
@@ -349,19 +350,28 @@ def _bitbank_latest_trade(trades):
 
 
 def _extract_bitbank_spread(symbol, raw_results):
+    spread_percent, _ = _extract_bitbank_spread_values(symbol, raw_results)
+    return spread_percent
+
+
+def _extract_bitbank_spread_values(symbol, raw_results):
     result = raw_results.get(("bitbank_orderbook", symbol), {})
     if not result.get("ok"):
-        return None
+        return None, None
     payload = result["data"]["payload"]
     tick = payload.get("data", {}).get("tick", {})
     best_bid = _first_orderbook_price(tick.get("bids"))
     best_ask = _first_orderbook_price(tick.get("asks"))
     if best_bid is None or best_ask is None or best_bid <= 0 or best_ask <= 0:
-        return None
+        return None, None
     midpoint = (best_bid + best_ask) / Decimal("2")
     if midpoint == 0:
-        return None
-    return ((best_ask - best_bid) / midpoint) * Decimal("100")
+        return None, None
+    raw_spread_abs = best_ask - best_bid
+    spread_abs = raw_spread_abs
+    if _is_fiat_symbol(symbol):
+        spread_abs = _integer_toman(spread_abs / Decimal("10"))
+    return ((raw_spread_abs / midpoint) * Decimal("100")), spread_abs
 
 
 def _first_orderbook_price(levels):
@@ -774,10 +784,12 @@ def _persist_rows(rows, fetched_at):
 
         previous_status = existing.status if existing is not None else None
         bitbank_spread_percent = _to_decimal(row.get("bitbankSpreadPercent"))
+        bitbank_spread_abs = _to_decimal(row.get("bitbankSpreadAbs"))
         bitbank_spread_status = row.get("bitbankSpreadStatus", "normal")
         bitbank_spread_fetched_at = fetched_at if row.get("bitbankSpreadPercent") is not None else None
         if existing is not None and bitbank_spread_percent is None:
             bitbank_spread_percent = existing.bitbank_spread_percent
+            bitbank_spread_abs = existing.bitbank_spread_abs
             bitbank_spread_status = existing.bitbank_spread_status
             bitbank_spread_fetched_at = existing.bitbank_spread_fetched_at
         quote, _ = MarketQuote.objects.update_or_create(
@@ -791,6 +803,7 @@ def _persist_rows(rows, fetched_at):
                 "gap_stddev_percent": None,
                 "gap_abs": _to_decimal(row["spreadAbs"]),
                 "bitbank_spread_percent": bitbank_spread_percent,
+                "bitbank_spread_abs": bitbank_spread_abs,
                 "bitbank_spread_status": bitbank_spread_status,
                 "bitbank_spread_fetched_at": bitbank_spread_fetched_at,
                 "last_trade_at": row["lastTradeAt"],
@@ -806,11 +819,12 @@ def _persist_spreads(cards, raw_results, fetched_at):
     for card in cards:
         if not _is_bitbank_source(card):
             continue
-        spread_percent = _extract_bitbank_spread(card.symbol, raw_results)
+        spread_percent, spread_abs = _extract_bitbank_spread_values(card.symbol, raw_results)
         if spread_percent is None:
             continue
         MarketQuote.objects.filter(symbol=_quote_key(card)).update(
             bitbank_spread_percent=spread_percent,
+            bitbank_spread_abs=spread_abs,
             bitbank_spread_status=_bitbank_spread_status(spread_percent, card),
             bitbank_spread_fetched_at=fetched_at,
         )
@@ -831,6 +845,7 @@ def _quote_to_row(card, quote):
             "spreadPercent": None,
             "spreadAbs": None,
             "bitbankSpreadPercent": None,
+            "bitbankSpreadAbs": None,
             "bitbankSpreadStatus": "normal",
             "spreadAlertColor": card.spread_alert_color,
             "spreadSirenEnabled": card.spread_siren_enabled,
@@ -856,6 +871,7 @@ def _quote_to_row(card, quote):
         "spreadPercent": _decimal_to_str(quote.gap_percent, places=4),
         "spreadAbs": _card_decimal_to_str(card, quote.gap_abs),
         "bitbankSpreadPercent": _decimal_to_str(quote.bitbank_spread_percent, places=4),
+        "bitbankSpreadAbs": _card_decimal_to_str(card, quote.bitbank_spread_abs),
         "bitbankSpreadStatus": bitbank_spread_status,
         "spreadAlertColor": card.spread_alert_color,
         "spreadSirenEnabled": card.spread_siren_enabled,

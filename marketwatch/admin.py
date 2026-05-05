@@ -125,7 +125,7 @@ class MonitorSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(MarketQuote)
 class MarketQuoteAdmin(admin.ModelAdmin):
-    list_display = ("symbol", "display_symbol", "reference_exchange", "gap_percent", "bitbank_spread_percent", "bitbank_spread_status", "status", "fetched_at")
+    list_display = ("symbol", "display_symbol", "reference_exchange", "gap_percent", "bitbank_spread_percent", "bitbank_spread_abs", "bitbank_spread_status", "status", "fetched_at")
     list_filter = ("reference_exchange", "status")
     search_fields = ("symbol", "display_symbol")
     readonly_fields = [field.name for field in MarketQuote._meta.fields]
