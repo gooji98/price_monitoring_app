@@ -140,6 +140,8 @@ h1 {
   --gap-light-rgb: 94, 240, 112;
   --spread-light: var(--purple);
   --spread-light-rgb: 155, 92, 255;
+  --siren-duration: 980ms;
+  --siren-delay: var(--siren-alert-delay, 0ms);
   --gap-background:
     linear-gradient(145deg, rgba(18, 104, 40, 0.92), rgba(8, 56, 24, 0.72)),
     var(--panel);
@@ -386,20 +388,19 @@ h1 {
 
 .price-card.spread-alert.siren,
 .price-card.spread-danger.siren {
-  animation: spread-siren 620ms steps(2, end) infinite;
+  animation: spread-siren var(--siren-duration) steps(2, end) infinite;
+  animation-delay: var(--siren-delay);
 }
 
 .price-card.spread-alert.siren .pulse,
 .price-card.spread-danger.siren .pulse {
-  animation: spread-siren-pulse 620ms steps(2, end) infinite;
+  animation: spread-siren-pulse var(--siren-duration) steps(2, end) infinite;
+  animation-delay: var(--siren-delay);
 }
 
 .price-card.spread-danger.siren {
-  animation-duration: 260ms;
-}
-
-.price-card.spread-danger.siren .pulse {
-  animation-duration: 260ms;
+  --siren-duration: 520ms;
+  --siren-delay: var(--siren-danger-delay, 0ms);
 }
 
 @keyframes spread-siren {

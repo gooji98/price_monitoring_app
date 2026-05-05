@@ -7,6 +7,10 @@ let pollSeconds = Number(document.body.dataset.pollInterval || 5);
 let timerId = null;
 let latestRows = [];
 const orderStorageKey = "price-monitor-card-order";
+const sirenDurations = {
+  alert: 980,
+  danger: 520,
+};
 
 symbolFilter.addEventListener("input", () => renderCards(latestRows));
 statusFilter.addEventListener("change", () => renderCards(latestRows));
@@ -37,6 +41,7 @@ function scheduleNext(delay) {
 }
 
 function renderCards(rows) {
+  syncSirenPhase();
   const filteredRows = applyFilters(applySavedOrder(rows));
   cards.innerHTML = filteredRows.map((row) => {
     const isError = row.errors && row.errors.length;
@@ -83,6 +88,18 @@ function renderCards(rows) {
   }
 
   bindDragAndDrop();
+}
+
+function syncSirenPhase() {
+  const now = Date.now();
+  document.documentElement.style.setProperty(
+    "--siren-alert-delay",
+    `-${now % sirenDurations.alert}ms`,
+  );
+  document.documentElement.style.setProperty(
+    "--siren-danger-delay",
+    `-${now % sirenDurations.danger}ms`,
+  );
 }
 
 function applyFilters(rows) {
