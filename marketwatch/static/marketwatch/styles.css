@@ -11,6 +11,8 @@
   --orange: #ffb347;
   --blue: #53b7ff;
   --gray: #c6d2d8;
+  --purple: #9b5cff;
+  --magenta: #ff4fd8;
 }
 
 * {
@@ -134,6 +136,12 @@ h1 {
 .price-card {
   --card-light: var(--green);
   --card-light-rgb: 94, 240, 112;
+  --gap-background:
+    linear-gradient(145deg, rgba(18, 104, 40, 0.92), rgba(8, 56, 24, 0.72)),
+    var(--panel);
+  --spread-background:
+    linear-gradient(145deg, rgba(104, 35, 168, 0.95), rgba(54, 17, 93, 0.76)),
+    var(--panel);
   min-height: 250px;
   border: 1px solid rgba(94, 240, 112, 0.58);
   border-radius: 8px;
@@ -155,6 +163,9 @@ h1 {
 .price-card.normal-blue {
   --card-light: var(--blue);
   --card-light-rgb: 83, 183, 255;
+  --gap-background:
+    linear-gradient(145deg, rgba(20, 84, 136, 0.92), rgba(10, 44, 79, 0.72)),
+    var(--panel);
   border-color: rgba(83, 183, 255, 0.68);
   background:
     linear-gradient(145deg, rgba(20, 84, 136, 0.92), rgba(10, 44, 79, 0.72)),
@@ -164,6 +175,9 @@ h1 {
 .price-card.normal-gray {
   --card-light: var(--gray);
   --card-light-rgb: 198, 210, 216;
+  --gap-background:
+    linear-gradient(145deg, rgba(69, 82, 88, 0.92), rgba(36, 45, 49, 0.72)),
+    var(--panel);
   border-color: rgba(198, 210, 216, 0.5);
   background:
     linear-gradient(145deg, rgba(69, 82, 88, 0.92), rgba(36, 45, 49, 0.72)),
@@ -173,6 +187,9 @@ h1 {
 .price-card.normal-yellow {
   --card-light: var(--gold);
   --card-light-rgb: 247, 200, 95;
+  --gap-background:
+    linear-gradient(145deg, rgba(130, 101, 34, 0.92), rgba(71, 55, 20, 0.72)),
+    var(--panel);
   border-color: rgba(247, 200, 95, 0.72);
   background:
     linear-gradient(145deg, rgba(130, 101, 34, 0.92), rgba(71, 55, 20, 0.72)),
@@ -182,10 +199,33 @@ h1 {
 .price-card.normal-red {
   --card-light: var(--red);
   --card-light-rgb: 255, 95, 87;
+  --gap-background:
+    linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
+    var(--panel);
   border-color: rgba(255, 95, 87, 0.78);
   background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
     var(--panel);
+}
+
+.price-card.normal-purple {
+  --card-light: var(--purple);
+  --card-light-rgb: 155, 92, 255;
+  --gap-background:
+    linear-gradient(145deg, rgba(104, 35, 168, 0.95), rgba(54, 17, 93, 0.76)),
+    var(--panel);
+  border-color: rgba(155, 92, 255, 0.78);
+  background: var(--gap-background);
+}
+
+.price-card.normal-magenta {
+  --card-light: var(--magenta);
+  --card-light-rgb: 255, 79, 216;
+  --gap-background:
+    linear-gradient(145deg, rgba(157, 34, 126, 0.94), rgba(83, 15, 65, 0.76)),
+    var(--panel);
+  border-color: rgba(255, 79, 216, 0.78);
+  background: var(--gap-background);
 }
 
 .price-card.low,
@@ -201,6 +241,9 @@ h1 {
 .price-card.warning {
   --card-light: var(--orange);
   --card-light-rgb: 255, 179, 71;
+  --gap-background:
+    linear-gradient(145deg, rgba(128, 79, 20, 0.94), rgba(69, 43, 13, 0.78)),
+    var(--panel);
   border-color: rgba(255, 179, 71, 0.8);
   background:
     linear-gradient(145deg, rgba(128, 79, 20, 0.94), rgba(69, 43, 13, 0.78)),
@@ -210,10 +253,111 @@ h1 {
 .price-card.danger {
   --card-light: var(--red);
   --card-light-rgb: 255, 95, 87;
+  --gap-background:
+    linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
+    var(--panel);
   border-color: rgba(255, 95, 87, 0.78);
   background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
     var(--panel);
+}
+
+.price-card.gap-warning {
+  --gap-background:
+    linear-gradient(145deg, rgba(128, 79, 20, 0.94), rgba(69, 43, 13, 0.78)),
+    var(--panel);
+}
+
+.price-card.gap-danger,
+.price-card.gap-error {
+  --gap-background:
+    linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
+    var(--panel);
+}
+
+.price-card.spread-purple {
+  --spread-background:
+    linear-gradient(145deg, rgba(104, 35, 168, 0.95), rgba(54, 17, 93, 0.76)),
+    var(--panel);
+  --spread-border: rgba(155, 92, 255, 0.86);
+  --card-light: var(--purple);
+  --card-light-rgb: 155, 92, 255;
+}
+
+.price-card.spread-magenta {
+  --spread-background:
+    linear-gradient(145deg, rgba(157, 34, 126, 0.94), rgba(83, 15, 65, 0.76)),
+    var(--panel);
+  --spread-border: rgba(255, 79, 216, 0.86);
+  --card-light: var(--magenta);
+  --card-light-rgb: 255, 79, 216;
+}
+
+.price-card.spread-green {
+  --spread-background:
+    linear-gradient(145deg, rgba(18, 104, 40, 0.92), rgba(8, 56, 24, 0.72)),
+    var(--panel);
+  --spread-border: rgba(94, 240, 112, 0.8);
+  --card-light: var(--green);
+  --card-light-rgb: 94, 240, 112;
+}
+
+.price-card.spread-blue {
+  --spread-background:
+    linear-gradient(145deg, rgba(20, 84, 136, 0.92), rgba(10, 44, 79, 0.72)),
+    var(--panel);
+  --spread-border: rgba(83, 183, 255, 0.82);
+  --card-light: var(--blue);
+  --card-light-rgb: 83, 183, 255;
+}
+
+.price-card.spread-gray {
+  --spread-background:
+    linear-gradient(145deg, rgba(69, 82, 88, 0.92), rgba(36, 45, 49, 0.72)),
+    var(--panel);
+  --spread-border: rgba(198, 210, 216, 0.62);
+  --card-light: var(--gray);
+  --card-light-rgb: 198, 210, 216;
+}
+
+.price-card.spread-yellow {
+  --spread-background:
+    linear-gradient(145deg, rgba(130, 101, 34, 0.92), rgba(71, 55, 20, 0.72)),
+    var(--panel);
+  --spread-border: rgba(247, 200, 95, 0.82);
+  --card-light: var(--gold);
+  --card-light-rgb: 247, 200, 95;
+}
+
+.price-card.spread-red {
+  --spread-background:
+    linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
+    var(--panel);
+  --spread-border: rgba(255, 95, 87, 0.82);
+  --card-light: var(--red);
+  --card-light-rgb: 255, 95, 87;
+}
+
+.price-card.spread-alert {
+  border-color: var(--spread-border, rgba(155, 92, 255, 0.86));
+  background: var(--spread-background);
+}
+
+.price-card.spread-alert.siren {
+  animation: spread-siren 620ms steps(2, end) infinite;
+}
+
+@keyframes spread-siren {
+  0%,
+  100% {
+    background: var(--spread-background);
+    border-color: var(--spread-border, rgba(155, 92, 255, 0.86));
+  }
+
+  50% {
+    background: var(--gap-background);
+    border-color: rgba(255, 255, 255, 0.42);
+  }
 }
 
 .card-head {

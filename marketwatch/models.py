@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -20,6 +22,8 @@ class MonitorCard(models.Model):
         ("gray", "خاکستری"),
         ("yellow", "زرد"),
         ("red", "قرمز"),
+        ("purple", "Purple"),
+        ("magenta", "Magenta"),
     ]
 
     symbol = models.CharField("نام کارت", max_length=24, help_text="مثلا BTCUSDT")
@@ -28,6 +32,20 @@ class MonitorCard(models.Model):
     show_on_monitor = models.BooleanField("نمایش در مانیتور؟", default=True)
     display_order = models.PositiveIntegerField("ترتیب نمایش", default=1)
     normal_color = models.CharField("رنگ کارت در حالت عادی", max_length=16, choices=COLOR_CHOICES, default="green")
+    spread_threshold_percent = models.DecimalField(
+        "Bitbank spread threshold (%)",
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal("0.2"),
+        help_text="Only applies when the source exchange is Bitbank.",
+    )
+    spread_alert_color = models.CharField(
+        "Bitbank spread alert color",
+        max_length=16,
+        choices=COLOR_CHOICES,
+        default="purple",
+    )
+    spread_siren_enabled = models.BooleanField("Bitbank spread siren", default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -106,7 +124,9 @@ class ThresholdRule(models.Model):
 class MonitorSettings(models.Model):
     sync_interval_minutes = models.PositiveIntegerField("دقایق سینک / داده‌گیری", default=1)
     sync_interval_seconds = models.PositiveIntegerField("ثانیه‌های سینک / داده‌گیری", default=60)
+    bitbank_spread_interval_seconds = models.PositiveIntegerField("Bitbank spread sync seconds", default=5)
     last_synced_at = models.DateTimeField("آخرین داده‌گیری", null=True, blank=True, editable=False)
+    last_spread_synced_at = models.DateTimeField("Bitbank last spread sync", null=True, blank=True, editable=False)
     telegram_alerts_enabled = models.BooleanField("Telegram alerts enabled", default=False)
     telegram_bot_token = models.CharField("Telegram bot token", max_length=128, blank=True)
     telegram_chat_id = models.CharField("Telegram chat id", max_length=64, blank=True)
@@ -128,12 +148,23 @@ class MonitorSettings(models.Model):
 
     @classmethod
     def load(cls):
-        obj, _ = cls.objects.get_or_create(pk=1, defaults={"sync_interval_minutes": 1, "sync_interval_seconds": 60})
+        obj, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                "sync_interval_minutes": 1,
+                "sync_interval_seconds": 60,
+                "bitbank_spread_interval_seconds": 5,
+            },
+        )
         return obj
 
     def mark_synced(self, synced_at=None):
         self.last_synced_at = synced_at or timezone.now()
         self.save(update_fields=["last_synced_at"])
+
+    def mark_spread_synced(self, synced_at=None):
+        self.last_spread_synced_at = synced_at or timezone.now()
+        self.save(update_fields=["last_spread_synced_at"])
 
 
 class MarketQuote(models.Model):
@@ -145,6 +176,9 @@ class MarketQuote(models.Model):
     gap_percent = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
     gap_stddev_percent = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
     gap_abs = models.DecimalField(max_digits=28, decimal_places=12, null=True, blank=True)
+    bitbank_spread_percent = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
+    bitbank_spread_status = models.CharField(max_length=16, default="normal")
+    bitbank_spread_fetched_at = models.DateTimeField(null=True, blank=True)
     last_trade_at = models.CharField(max_length=64, null=True, blank=True)
     status = models.CharField(max_length=16, default="error")
     errors = models.JSONField(default=list, blank=True)

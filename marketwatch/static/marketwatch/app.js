@@ -43,13 +43,20 @@ function renderCards(rows) {
     const tone = isError ? "error" : row.status;
     const spreadAbs = row.spreadAbs === null ? "-" : formatNumber(row.spreadAbs);
     const spread = row.spreadPercent === null ? "-" : `${signed(formatPercent(row.spreadPercent))}%`;
+    const bitbankSpread = row.bitbankSpreadPercent === null || row.bitbankSpreadPercent === undefined ? "-" : `${formatPercent(row.bitbankSpreadPercent)}%`;
+    const spreadLine = row.sourceExchange === "Bitbank"
+      ? `<div><dt>Spread</dt><dd>${bitbankSpread}</dd></div>`
+      : "";
     const sourceLabel = row.sourceExchange || "Wallex";
     const referenceLabel = row.referenceExchange || "-";
     const errorText = isError ? `<div class="error-text">${escapeHtml(row.errors.join(" | "))}</div>` : "";
     const normalColor = row.normalColor || "green";
+    const spreadColor = row.spreadAlertColor || "purple";
+    const gapStatus = row.gapStatus || tone;
+    const sirenClass = row.spreadSirenEnabled ? "siren" : "";
 
     return `
-      <article class="price-card ${tone} normal-${normalColor}" draggable="true" data-card-key="${escapeHtml(cardKey(row))}">
+      <article class="price-card ${tone} ${sirenClass} normal-${normalColor} spread-${spreadColor} gap-${gapStatus}" draggable="true" data-card-key="${escapeHtml(cardKey(row))}">
         <div class="card-head">
           <h2>${escapeHtml(row.displaySymbol)}</h2>
           <span class="pulse"></span>
@@ -59,6 +66,7 @@ function renderCards(rows) {
           <div><dt>${referenceLabel}</dt><dd>${formatNumber(row.referencePrice)}</dd></div>
           <div><dt>Gap Amount</dt><dd>${spreadAbs}</dd></div>
           <div><dt>Gap %</dt><dd>${spread}</dd></div>
+          ${spreadLine}
         </dl>
         <dl class="meta">
           <div><dt>Last sync</dt><dd>${formatTradeTime(row.lastSyncedAt)}</dd></div>

@@ -127,6 +127,8 @@ PRICE_MONITOR = {
     "BITBANK_ORDERBOOK_ENDPOINT": os.environ.get("BITBANK_ORDERBOOK_ENDPOINT", "/open/api/market_dept"),
     "BITBANK_TICKER_ENDPOINT": os.environ.get("BITBANK_TICKER_ENDPOINT", "/open/api/get_ticker"),
     "BITBANK_TRADES_ENDPOINT": os.environ.get("BITBANK_TRADES_ENDPOINT", "/open/api/get_trades"),
+    "BITBANK_ORDERBOOK_REST_URL": os.environ.get("BITBANK_ORDERBOOK_REST_URL", "https://openapi.bitbank3.com"),
+    "BITBANK_ORDERBOOK_DEPTH_TYPE": os.environ.get("BITBANK_ORDERBOOK_DEPTH_TYPE", "step0"),
     "BITBANK_FORWARDED_FOR": os.environ.get("BITBANK_FORWARDED_FOR", ""),
     "BITBANK_ALLOW_SIMOPS": os.environ.get("BITBANK_ALLOW_SIMOPS", "0") == "1",
     "BITBANK_WS_URL": os.environ.get("BITBANK_WS_URL", ""),

@@ -58,29 +58,44 @@ def build_snapshot():
 
 def collect_market_snapshot():
     monitor_settings = _monitor_settings()
-    if not _sync_is_due(monitor_settings):
+    price_due = _sync_is_due(monitor_settings)
+    spread_due = _spread_sync_is_due(monitor_settings)
+    if not price_due and not spread_due:
         return build_snapshot()
 
     cards = _configured_cards(visible_only=True)
-    symbols = [card.symbol for card in cards]
     timeout = settings.PRICE_MONITOR["REQUEST_TIMEOUT_SECONDS"]
     fetched_at = timezone.now()
     jobs = {}
 
-    for card in cards:
-        symbol = card.symbol
-        source_exchange = _source_exchange(card).lower()
-        compare_exchange = _compare_exchange(card).lower()
-        _add_exchange_job(jobs, source_exchange, symbol)
-        _add_exchange_job(jobs, compare_exchange, symbol)
-        if _needs_usdt_tmn_rate(card):
-            _add_exchange_job(jobs, "nobitex", "USDTTMN")
+    if price_due:
+        for card in cards:
+            symbol = card.symbol
+            source_exchange = _source_exchange(card).lower()
+            compare_exchange = _compare_exchange(card).lower()
+            _add_exchange_job(jobs, source_exchange, symbol)
+            _add_exchange_job(jobs, compare_exchange, symbol)
+            if _needs_nobitex_usdt_conversion(card):
+                _add_exchange_job(jobs, "nobitex", "USDTTMN")
+
+    if spread_due:
+        for card in cards:
+            _add_bitbank_orderbook_job(jobs, card)
 
     raw_results = _fetch_many(jobs, timeout)
-    rows = [_build_row(card, raw_results, fetched_at) for card in cards]
-    _persist_rows(rows, fetched_at)
-    _send_periodic_telegram_summary(rows, monitor_settings, fetched_at)
-    monitor_settings.mark_synced(fetched_at)
+    if price_due:
+        rows = [_build_row(card, raw_results, fetched_at) for card in cards]
+        _persist_rows(rows, fetched_at)
+        _send_periodic_telegram_summary(rows, monitor_settings, fetched_at)
+        monitor_settings.mark_synced(fetched_at)
+    else:
+        rows = build_snapshot()["rows"]
+
+    if spread_due:
+        _persist_spreads(cards, raw_results, fetched_at)
+        monitor_settings.mark_spread_synced(fetched_at)
+        if not price_due:
+            rows = build_snapshot()["rows"]
 
     return {
         "pollIntervalSeconds": _snapshot_poll_interval(monitor_settings),
@@ -204,11 +219,11 @@ def _build_row(card, raw_results, fetched_at):
     reference_key = reference_exchange.lower()
     reference = _extract(reference_key, symbol, raw_results)
     reference = _normalize_reference(symbol, reference_key, source, reference)
-    if _needs_usdt_tmn_rate(card):
+    if _needs_nobitex_usdt_conversion(card):
         usdt_tmn = _extract("nobitex", "USDTTMN", raw_results)
         usdt_tmn = _normalize_reference("USDTTMN", "nobitex", source, usdt_tmn)
-        if source.price is not None and usdt_tmn.price is not None:
-            source = TradePrice(source.price * usdt_tmn.price, source.timestamp, source.latency_ms)
+        if reference.price is not None and usdt_tmn.price is not None and usdt_tmn.price != 0:
+            reference = TradePrice(reference.price / usdt_tmn.price, reference.timestamp, reference.latency_ms)
 
     spread = None
     spread_abs = None
@@ -220,11 +235,19 @@ def _build_row(card, raw_results, fetched_at):
         _delete_old_gap_samples(fetched_at)
         status = _status_for_gap(spread, card)
 
+    bitbank_spread_percent = _extract_bitbank_spread(symbol, raw_results) if _is_bitbank_source(card) else None
+    bitbank_spread_status = _bitbank_spread_status(bitbank_spread_percent, card)
+    display_status = _display_status(status, bitbank_spread_status)
+
     errors = []
     for key in (source_key, reference_key):
         result = raw_results.get((key, symbol), {})
         if not result.get("ok"):
             errors.append(f"{key}: {result.get('error', 'fetch failed')}")
+    if _is_bitbank_source(card):
+        result = raw_results.get(("bitbank_orderbook", symbol), {})
+        if result and not result.get("ok"):
+            errors.append(f"bitbank spread: {result.get('error', 'fetch failed')}")
 
     return {
         "symbol": symbol,
@@ -237,9 +260,14 @@ def _build_row(card, raw_results, fetched_at):
         "normalColor": card.normal_color,
         "spreadPercent": _decimal_to_str(spread, places=4),
         "spreadAbs": _card_decimal_to_str(card, spread_abs),
+        "bitbankSpreadPercent": _decimal_to_str(bitbank_spread_percent, places=4),
+        "bitbankSpreadStatus": bitbank_spread_status,
+        "spreadAlertColor": card.spread_alert_color,
+        "spreadSirenEnabled": card.spread_siren_enabled,
+        "gapStatus": status,
         "lastTradeAt": source.timestamp or reference.timestamp,
         "lastSyncedAt": timezone.localtime(fetched_at).isoformat(),
-        "status": status,
+        "status": display_status,
         "errors": errors,
         "fetchedAt": timezone.localtime(fetched_at).isoformat(),
     }
@@ -295,7 +323,11 @@ def _integer_toman(value):
 
 
 def _card_outputs_toman(card):
-    return _is_fiat_symbol(card.symbol) or _needs_usdt_tmn_rate(card)
+    return _is_fiat_symbol(card.symbol)
+
+
+def _is_bitbank_source(card):
+    return _source_exchange(card).lower() == "bitbank"
 
 
 def _card_decimal_to_str(card, value):
@@ -314,6 +346,48 @@ def _bitbank_latest_trade(trades):
         key=lambda trade: int(trade.get("ctime") or trade.get("time") or trade.get("id") or 0),
         default={},
     )
+
+
+def _extract_bitbank_spread(symbol, raw_results):
+    result = raw_results.get(("bitbank_orderbook", symbol), {})
+    if not result.get("ok"):
+        return None
+    payload = result["data"]["payload"]
+    tick = payload.get("data", {}).get("tick", {})
+    best_bid = _first_orderbook_price(tick.get("bids"))
+    best_ask = _first_orderbook_price(tick.get("asks"))
+    if best_bid is None or best_ask is None or best_bid <= 0 or best_ask <= 0:
+        return None
+    midpoint = (best_bid + best_ask) / Decimal("2")
+    if midpoint == 0:
+        return None
+    return ((best_ask - best_bid) / midpoint) * Decimal("100")
+
+
+def _first_orderbook_price(levels):
+    if not isinstance(levels, list) or not levels:
+        return None
+    first = levels[0]
+    if isinstance(first, (list, tuple)):
+        return _to_decimal(first[0] if first else None)
+    if isinstance(first, dict):
+        return _to_decimal(first.get("price") or first.get("p"))
+    return _to_decimal(first)
+
+
+def _bitbank_spread_status(spread_percent, card):
+    if spread_percent is None or not _is_bitbank_source(card):
+        return "normal"
+    threshold = abs(card.spread_threshold_percent or Decimal("0"))
+    if threshold == 0:
+        return "normal"
+    return "spread-alert" if abs(spread_percent) >= threshold else "normal"
+
+
+def _display_status(gap_status, bitbank_spread_status):
+    if bitbank_spread_status != "normal":
+        return bitbank_spread_status
+    return gap_status
 
 
 def _bitbank_trade_from_ws_payload(payload):
@@ -424,6 +498,21 @@ def _add_exchange_job(jobs, exchange, symbol):
         jobs[("bitbank", symbol)] = f"{base_url}{endpoint}?symbol={_bitbank_symbol(symbol)}"
 
 
+def _add_bitbank_orderbook_job(jobs, card):
+    if not _is_bitbank_source(card):
+        return
+    symbol = card.symbol
+    params = urlencode(
+        {
+            "symbol": _bitbank_symbol(symbol),
+            "type": settings.PRICE_MONITOR["BITBANK_ORDERBOOK_DEPTH_TYPE"],
+        }
+    )
+    base_url = settings.PRICE_MONITOR["BITBANK_ORDERBOOK_REST_URL"].rstrip("/")
+    endpoint = settings.PRICE_MONITOR["BITBANK_ORDERBOOK_ENDPOINT"]
+    jobs[("bitbank_orderbook", symbol)] = f"{base_url}{endpoint}?{params}"
+
+
 def _bitbank_ws_subscribe_message(symbol):
     template = settings.PRICE_MONITOR.get("BITBANK_WS_SUBSCRIBE_MESSAGE", "").strip()
     if not template and "bitbank3.com" in settings.PRICE_MONITOR.get("BITBANK_WS_URL", ""):
@@ -444,7 +533,7 @@ def _source_exchange(card):
     return card.reference_exchange
 
 
-def _needs_usdt_tmn_rate(card):
+def _needs_nobitex_usdt_conversion(card):
     return (
         card.reference_exchange == "Bitbank"
         and card.compare_exchange == "Nobitex"
@@ -617,6 +706,7 @@ def _monitor_settings():
         return MonitorSettings(
             sync_interval_minutes=max(1, settings.PRICE_MONITOR["POLL_INTERVAL_SECONDS"] // 60),
             sync_interval_seconds=settings.PRICE_MONITOR["POLL_INTERVAL_SECONDS"],
+            bitbank_spread_interval_seconds=5,
         )
 
 
@@ -627,8 +717,17 @@ def _sync_is_due(monitor_settings):
     return timezone.now() >= next_sync_at
 
 
+def _spread_sync_is_due(monitor_settings):
+    if monitor_settings.last_spread_synced_at is None:
+        return True
+    next_sync_at = monitor_settings.last_spread_synced_at + timedelta(
+        seconds=monitor_settings.bitbank_spread_interval_seconds
+    )
+    return timezone.now() >= next_sync_at
+
+
 def _snapshot_poll_interval(monitor_settings):
-    return max(1, min(10, monitor_settings.sync_interval_seconds))
+    return max(1, min(10, monitor_settings.sync_interval_seconds, monitor_settings.bitbank_spread_interval_seconds))
 
 
 def _decimal_env(key, default):
@@ -674,6 +773,13 @@ def _persist_rows(rows, fetched_at):
             continue
 
         previous_status = existing.status if existing is not None else None
+        bitbank_spread_percent = _to_decimal(row.get("bitbankSpreadPercent"))
+        bitbank_spread_status = row.get("bitbankSpreadStatus", "normal")
+        bitbank_spread_fetched_at = fetched_at if row.get("bitbankSpreadPercent") is not None else None
+        if existing is not None and bitbank_spread_percent is None:
+            bitbank_spread_percent = existing.bitbank_spread_percent
+            bitbank_spread_status = existing.bitbank_spread_status
+            bitbank_spread_fetched_at = existing.bitbank_spread_fetched_at
         quote, _ = MarketQuote.objects.update_or_create(
             symbol=row["quoteKey"],
             defaults={
@@ -684,11 +790,29 @@ def _persist_rows(rows, fetched_at):
                 "gap_percent": _to_decimal(row["spreadPercent"]),
                 "gap_stddev_percent": None,
                 "gap_abs": _to_decimal(row["spreadAbs"]),
+                "bitbank_spread_percent": bitbank_spread_percent,
+                "bitbank_spread_status": bitbank_spread_status,
+                "bitbank_spread_fetched_at": bitbank_spread_fetched_at,
                 "last_trade_at": row["lastTradeAt"],
                 "status": row["status"],
                 "errors": row["errors"],
                 "fetched_at": fetched_at,
             },
+        )
+
+
+@transaction.atomic
+def _persist_spreads(cards, raw_results, fetched_at):
+    for card in cards:
+        if not _is_bitbank_source(card):
+            continue
+        spread_percent = _extract_bitbank_spread(card.symbol, raw_results)
+        if spread_percent is None:
+            continue
+        MarketQuote.objects.filter(symbol=_quote_key(card)).update(
+            bitbank_spread_percent=spread_percent,
+            bitbank_spread_status=_bitbank_spread_status(spread_percent, card),
+            bitbank_spread_fetched_at=fetched_at,
         )
 
 
@@ -706,11 +830,19 @@ def _quote_to_row(card, quote):
             "normalColor": card.normal_color,
             "spreadPercent": None,
             "spreadAbs": None,
+            "bitbankSpreadPercent": None,
+            "bitbankSpreadStatus": "normal",
+            "spreadAlertColor": card.spread_alert_color,
+            "spreadSirenEnabled": card.spread_siren_enabled,
+            "gapStatus": "error",
             "lastTradeAt": None,
             "lastSyncedAt": None,
             "status": "error",
             "errors": ["waiting for celery refresh"],
         }
+
+    gap_status = _status_for_gap(quote.gap_percent, card) if quote.gap_percent is not None else quote.status
+    bitbank_spread_status = quote.bitbank_spread_status if _is_bitbank_source(card) else "normal"
 
     return {
         "symbol": symbol,
@@ -723,9 +855,14 @@ def _quote_to_row(card, quote):
         "normalColor": card.normal_color,
         "spreadPercent": _decimal_to_str(quote.gap_percent, places=4),
         "spreadAbs": _card_decimal_to_str(card, quote.gap_abs),
+        "bitbankSpreadPercent": _decimal_to_str(quote.bitbank_spread_percent, places=4),
+        "bitbankSpreadStatus": bitbank_spread_status,
+        "spreadAlertColor": card.spread_alert_color,
+        "spreadSirenEnabled": card.spread_siren_enabled,
+        "gapStatus": gap_status,
         "lastTradeAt": quote.last_trade_at,
         "lastSyncedAt": timezone.localtime(quote.fetched_at).isoformat(),
-        "status": _status_for_gap(quote.gap_percent, card) if quote.gap_percent is not None else quote.status,
+        "status": _display_status(gap_status, bitbank_spread_status),
         "errors": quote.errors,
     }
 
