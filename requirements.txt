@@ -8,6 +8,7 @@ psycopg[binary]>=3.2,<4.0
 
 # Background jobs and scheduled refreshes
 celery>=5.4,<6.0
+redis>=5.0,<6.0
 websocket-client>=1.8,<2.0
 
 # Time zone database, required on Windows and useful in slim environments

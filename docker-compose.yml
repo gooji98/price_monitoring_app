@@ -16,6 +16,18 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   web:
     build: .
     restart: unless-stopped
@@ -26,6 +38,8 @@ services:
       RUN_COLLECTSTATIC: "1"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - static_volume:/app/staticfiles
@@ -43,6 +57,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       web:
         condition: service_started
     volumes:
@@ -59,6 +75,8 @@ services:
     command: celery -A price_monitor beat --loglevel=info --schedule=/app/.celery/celerybeat-schedule
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       web:
         condition: service_started
@@ -80,3 +98,4 @@ volumes:
   postgres_data:
   static_volume:
   celery_data:
+  redis_data:

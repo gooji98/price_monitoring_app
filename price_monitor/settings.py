@@ -134,19 +134,17 @@ PRICE_MONITOR = {
     "BITBANK_WS_TIMEOUT_SECONDS": max(1, int(os.environ.get("BITBANK_WS_TIMEOUT_SECONDS", "8"))),
 }
 
-CELERY_DIR = BASE_DIR / ".celery"
-CELERY_DIR.mkdir(exist_ok=True)
-(CELERY_DIR / "in").mkdir(exist_ok=True)
-(CELERY_DIR / "out").mkdir(exist_ok=True)
-(CELERY_DIR / "broker").mkdir(exist_ok=True)
-(CELERY_DIR / "processed").mkdir(exist_ok=True)
-
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "filesystem://")
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "data_folder_in": str(CELERY_DIR / "broker"),
-    "data_folder_out": str(CELERY_DIR / "broker"),
-    "data_folder_processed": str(CELERY_DIR / "processed"),
-}
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+if CELERY_BROKER_URL.startswith("filesystem://"):
+    CELERY_DIR = BASE_DIR / ".celery"
+    CELERY_DIR.mkdir(exist_ok=True)
+    (CELERY_DIR / "broker").mkdir(exist_ok=True)
+    (CELERY_DIR / "processed").mkdir(exist_ok=True)
+    CELERY_BROKER_TRANSPORT_OPTIONS = {
+        "data_folder_in": str(CELERY_DIR / "broker"),
+        "data_folder_out": str(CELERY_DIR / "broker"),
+        "data_folder_processed": str(CELERY_DIR / "processed"),
+    }
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_TIMEZONE = TIME_ZONE
