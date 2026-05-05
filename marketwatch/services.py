@@ -363,11 +363,9 @@ def _decimal_to_str(value, places=None):
 
 def _display_symbol(symbol):
     if symbol.endswith("USDT"):
-        return f"{symbol[:-4]} / USDT"
-    if symbol.endswith("TMN"):
-        return f"{symbol[:-3]} / TMN"
-    if symbol.endswith("IRR"):
-        return f"{symbol[:-3]} / TMN"
+        return f"{symbol[:-4]}USDT"
+    if symbol.endswith(("TMN", "IRT", "IRR")):
+        return f"{symbol[:-3]}IRT"
     return symbol
 
 
@@ -717,7 +715,7 @@ def _quote_to_row(card, quote):
     return {
         "symbol": symbol,
         "quoteKey": _quote_key(card),
-        "displaySymbol": quote.display_symbol,
+        "displaySymbol": card.display_symbol,
         "sourceExchange": _source_exchange(card),
         "wallexPrice": _card_decimal_to_str(card, quote.wallex_price),
         "referencePrice": _card_decimal_to_str(card, quote.reference_price),

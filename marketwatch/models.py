@@ -63,11 +63,9 @@ class MonitorCard(models.Model):
     @property
     def display_symbol(self):
         if self.symbol.endswith("USDT"):
-            return f"{self.symbol[:-4]} / USDT"
-        if self.symbol.endswith("TMN"):
-            return f"{self.symbol[:-3]} / TMN"
-        if self.symbol.endswith("IRR"):
-            return f"{self.symbol[:-3]} / TMN"
+            return f"{self.symbol[:-4]}USDT"
+        if self.symbol.endswith(("TMN", "IRT", "IRR")):
+            return f"{self.symbol[:-3]}IRT"
         return self.symbol
 
 
