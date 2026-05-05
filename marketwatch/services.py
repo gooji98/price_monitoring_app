@@ -49,8 +49,8 @@ def build_snapshot():
     monitor_settings = _monitor_settings()
 
     return {
-        "pollIntervalSeconds": 10,
-        "syncIntervalSeconds": monitor_settings.sync_interval_minutes * 60,
+        "pollIntervalSeconds": _snapshot_poll_interval(monitor_settings),
+        "syncIntervalSeconds": monitor_settings.sync_interval_seconds,
         "fetchedAt": timezone.localtime(fetched_at).isoformat(),
         "rows": rows,
     }
@@ -83,8 +83,8 @@ def collect_market_snapshot():
     monitor_settings.mark_synced(fetched_at)
 
     return {
-        "pollIntervalSeconds": 10,
-        "syncIntervalSeconds": monitor_settings.sync_interval_minutes * 60,
+        "pollIntervalSeconds": _snapshot_poll_interval(monitor_settings),
+        "syncIntervalSeconds": monitor_settings.sync_interval_seconds,
         "fetchedAt": timezone.localtime(fetched_at).isoformat(),
         "rows": rows,
     }
@@ -616,14 +616,21 @@ def _monitor_settings():
     try:
         return MonitorSettings.load()
     except (OperationalError, ProgrammingError):
-        return MonitorSettings(sync_interval_minutes=max(1, settings.PRICE_MONITOR["POLL_INTERVAL_SECONDS"] // 60))
+        return MonitorSettings(
+            sync_interval_minutes=max(1, settings.PRICE_MONITOR["POLL_INTERVAL_SECONDS"] // 60),
+            sync_interval_seconds=settings.PRICE_MONITOR["POLL_INTERVAL_SECONDS"],
+        )
 
 
 def _sync_is_due(monitor_settings):
     if monitor_settings.last_synced_at is None:
         return True
-    next_sync_at = monitor_settings.last_synced_at + timedelta(minutes=monitor_settings.sync_interval_minutes)
+    next_sync_at = monitor_settings.last_synced_at + timedelta(seconds=monitor_settings.sync_interval_seconds)
     return timezone.now() >= next_sync_at
+
+
+def _snapshot_poll_interval(monitor_settings):
+    return max(1, min(10, monitor_settings.sync_interval_seconds))
 
 
 def _decimal_env(key, default):

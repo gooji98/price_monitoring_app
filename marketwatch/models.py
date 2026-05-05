@@ -107,6 +107,7 @@ class ThresholdRule(models.Model):
 
 class MonitorSettings(models.Model):
     sync_interval_minutes = models.PositiveIntegerField("دقایق سینک / داده‌گیری", default=1)
+    sync_interval_seconds = models.PositiveIntegerField("ثانیه‌های سینک / داده‌گیری", default=60)
     last_synced_at = models.DateTimeField("آخرین داده‌گیری", null=True, blank=True, editable=False)
     telegram_alerts_enabled = models.BooleanField("Telegram alerts enabled", default=False)
     telegram_bot_token = models.CharField("Telegram bot token", max_length=128, blank=True)
@@ -125,11 +126,11 @@ class MonitorSettings(models.Model):
         verbose_name_plural = "تنظیمات مانیتور"
 
     def __str__(self):
-        return f"هر {self.sync_interval_minutes} دقیقه"
+        return f"هر {self.sync_interval_seconds} ثانیه"
 
     @classmethod
     def load(cls):
-        obj, _ = cls.objects.get_or_create(pk=1, defaults={"sync_interval_minutes": 1})
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={"sync_interval_minutes": 1, "sync_interval_seconds": 60})
         return obj
 
     def mark_synced(self, synced_at=None):

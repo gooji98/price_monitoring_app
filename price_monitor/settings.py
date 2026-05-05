@@ -151,8 +151,8 @@ CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULE = {
-    "refresh-market-prices-check-every-60-seconds": {
+    "refresh-market-prices-check-every-second": {
         "task": "marketwatch.tasks.refresh_market_prices",
-        "schedule": 60.0,
+        "schedule": 1.0,
     }
 }

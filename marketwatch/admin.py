@@ -64,13 +64,13 @@ class ThresholdRuleAdmin(admin.ModelAdmin):
 @admin.register(MonitorSettings)
 class MonitorSettingsAdmin(admin.ModelAdmin):
     list_display = (
-        "sync_interval_minutes",
+        "sync_interval_seconds",
         "telegram_alerts_enabled",
         "last_synced_at",
         "updated_at",
     )
     fieldsets = (
-        (None, {"fields": ("sync_interval_minutes", "last_synced_at")}),
+        (None, {"fields": ("sync_interval_seconds", "last_synced_at")}),
         (
             "Telegram alerts",
             {

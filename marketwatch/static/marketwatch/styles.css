@@ -9,6 +9,8 @@
   --red: #ff5f57;
   --gold: #f7c85f;
   --orange: #ffb347;
+  --blue: #53b7ff;
+  --gray: #c6d2d8;
 }
 
 * {
@@ -130,6 +132,8 @@ h1 {
 }
 
 .price-card {
+  --card-light: var(--green);
+  --card-light-rgb: 94, 240, 112;
   min-height: 250px;
   border: 1px solid rgba(94, 240, 112, 0.58);
   border-radius: 8px;
@@ -149,6 +153,8 @@ h1 {
 }
 
 .price-card.normal-blue {
+  --card-light: var(--blue);
+  --card-light-rgb: 83, 183, 255;
   border-color: rgba(83, 183, 255, 0.68);
   background:
     linear-gradient(145deg, rgba(20, 84, 136, 0.92), rgba(10, 44, 79, 0.72)),
@@ -156,6 +162,8 @@ h1 {
 }
 
 .price-card.normal-gray {
+  --card-light: var(--gray);
+  --card-light-rgb: 198, 210, 216;
   border-color: rgba(198, 210, 216, 0.5);
   background:
     linear-gradient(145deg, rgba(69, 82, 88, 0.92), rgba(36, 45, 49, 0.72)),
@@ -163,6 +171,8 @@ h1 {
 }
 
 .price-card.normal-yellow {
+  --card-light: var(--gold);
+  --card-light-rgb: 247, 200, 95;
   border-color: rgba(247, 200, 95, 0.72);
   background:
     linear-gradient(145deg, rgba(130, 101, 34, 0.92), rgba(71, 55, 20, 0.72)),
@@ -170,6 +180,8 @@ h1 {
 }
 
 .price-card.normal-red {
+  --card-light: var(--red);
+  --card-light-rgb: 255, 95, 87;
   border-color: rgba(255, 95, 87, 0.78);
   background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
@@ -178,6 +190,8 @@ h1 {
 
 .price-card.low,
 .price-card.error {
+  --card-light: var(--red);
+  --card-light-rgb: 255, 95, 87;
   border-color: rgba(255, 95, 87, 0.78);
   background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
@@ -185,6 +199,8 @@ h1 {
 }
 
 .price-card.warning {
+  --card-light: var(--orange);
+  --card-light-rgb: 255, 179, 71;
   border-color: rgba(255, 179, 71, 0.8);
   background:
     linear-gradient(145deg, rgba(128, 79, 20, 0.94), rgba(69, 43, 13, 0.78)),
@@ -192,6 +208,8 @@ h1 {
 }
 
 .price-card.danger {
+  --card-light: var(--red);
+  --card-light-rgb: 255, 95, 87;
   border-color: rgba(255, 95, 87, 0.78);
   background:
     linear-gradient(145deg, rgba(134, 30, 27, 0.92), rgba(71, 16, 18, 0.75)),
@@ -217,21 +235,32 @@ h1 {
   height: 20px;
   flex: 0 0 20px;
   border-radius: 999px;
-  background: var(--green);
-  box-shadow: 0 0 18px rgba(94, 240, 112, 0.6);
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9), transparent 0.22rem),
+    var(--card-light);
+  box-shadow:
+    0 0 0 0 rgba(var(--card-light-rgb), 0.46),
+    0 0 18px rgba(var(--card-light-rgb), 0.72);
+  animation: live-pulse 1.65s ease-in-out infinite;
 }
 
-.low .pulse,
-.warning .pulse,
-.danger .pulse,
-.error .pulse {
-  background: var(--red);
-  box-shadow: 0 0 18px rgba(255, 95, 87, 0.58);
-}
+@keyframes live-pulse {
+  0%,
+  100% {
+    transform: scale(0.88);
+    opacity: 0.78;
+    box-shadow:
+      0 0 0 0 rgba(var(--card-light-rgb), 0.34),
+      0 0 13px rgba(var(--card-light-rgb), 0.56);
+  }
 
-.warning .pulse {
-  background: var(--orange);
-  box-shadow: 0 0 18px rgba(255, 179, 71, 0.58);
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    box-shadow:
+      0 0 0 7px rgba(var(--card-light-rgb), 0),
+      0 0 24px rgba(var(--card-light-rgb), 0.82);
+  }
 }
 
 dl {
