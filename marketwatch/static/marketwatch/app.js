@@ -6,7 +6,6 @@ const fullscreenToggle = document.querySelector("#fullscreen-toggle");
 let pollSeconds = Number(document.body.dataset.pollInterval || 5);
 let timerId = null;
 let latestRows = [];
-let draggedSymbol = null;
 const orderStorageKey = "price-monitor-card-order";
 
 symbolFilter.addEventListener("input", () => renderCards(latestRows));
@@ -50,7 +49,7 @@ function renderCards(rows) {
     const normalColor = row.normalColor || "green";
 
     return `
-      <article class="price-card ${tone} normal-${normalColor}" draggable="true" data-symbol="${escapeHtml(row.symbol)}">
+      <article class="price-card ${tone} normal-${normalColor}" draggable="true" data-card-key="${escapeHtml(cardKey(row))}">
         <div class="card-head">
           <h2>${escapeHtml(row.displaySymbol)}</h2>
           <span class="pulse"></span>
@@ -96,10 +95,12 @@ function applySavedOrder(rows) {
   const savedOrder = readSavedOrder();
   if (!savedOrder.length) return rows;
 
-  const orderIndex = new Map(savedOrder.map((symbol, index) => [symbol, index]));
+  const orderIndex = new Map(savedOrder.map((key, index) => [key, index]));
   return [...rows].sort((a, b) => {
-    const aIndex = orderIndex.has(a.symbol) ? orderIndex.get(a.symbol) : Number.MAX_SAFE_INTEGER;
-    const bIndex = orderIndex.has(b.symbol) ? orderIndex.get(b.symbol) : Number.MAX_SAFE_INTEGER;
+    const aKey = cardKey(a);
+    const bKey = cardKey(b);
+    const aIndex = savedOrderIndex(orderIndex, aKey, a.symbol);
+    const bIndex = savedOrderIndex(orderIndex, bKey, b.symbol);
     return aIndex - bIndex;
   });
 }
@@ -107,11 +108,9 @@ function applySavedOrder(rows) {
 function bindDragAndDrop() {
   cards.querySelectorAll(".price-card").forEach((card) => {
     card.addEventListener("dragstart", () => {
-      draggedSymbol = card.dataset.symbol;
       card.classList.add("dragging");
     });
     card.addEventListener("dragend", () => {
-      draggedSymbol = null;
       card.classList.remove("dragging");
       saveVisibleOrder();
     });
@@ -128,8 +127,8 @@ function bindDragAndDrop() {
 }
 
 function saveVisibleOrder() {
-  const visibleOrder = [...cards.querySelectorAll(".price-card")].map((card) => card.dataset.symbol);
-  const savedOrder = readSavedOrder().filter((symbol) => !visibleOrder.includes(symbol));
+  const visibleOrder = [...cards.querySelectorAll(".price-card")].map((card) => card.dataset.cardKey);
+  const savedOrder = readSavedOrder().filter((key) => !visibleOrder.includes(key));
   localStorage.setItem(orderStorageKey, JSON.stringify([...visibleOrder, ...savedOrder]));
 }
 
@@ -140,6 +139,16 @@ function readSavedOrder() {
   } catch {
     return [];
   }
+}
+
+function cardKey(row) {
+  return row.quoteKey || `${row.sourceExchange || ""}:${row.symbol || ""}:${row.referenceExchange || ""}`;
+}
+
+function savedOrderIndex(orderIndex, key, legacySymbol) {
+  if (orderIndex.has(key)) return orderIndex.get(key);
+  if (orderIndex.has(legacySymbol)) return orderIndex.get(legacySymbol);
+  return Number.MAX_SAFE_INTEGER;
 }
 
 function formatNumber(value) {
