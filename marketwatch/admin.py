@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import GapSample, MarketQuote, MonitorCard, MonitorSettings, ThresholdRule
+from .models import GapSample, MarketQuote, MonitorCard, MonitorSettings, TelegramSubscriber, ThresholdRule
 
 
 class ThresholdRuleInline(admin.TabularInline):
@@ -110,19 +110,32 @@ class MonitorSettingsAdmin(admin.ModelAdmin):
                     "telegram_alerts_enabled",
                     "telegram_bot_token",
                     "telegram_chat_id",
+                    "telegram_update_offset",
                     "telegram_summary_interval_minutes",
                     "telegram_last_summary_at",
                 )
             },
         ),
     )
-    readonly_fields = ("last_synced_at", "last_spread_synced_at", "telegram_last_summary_at")
+    readonly_fields = ("last_synced_at", "last_spread_synced_at", "telegram_update_offset", "telegram_last_summary_at")
 
     def has_add_permission(self, request):
         return not MonitorSettings.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(TelegramSubscriber)
+class TelegramSubscriberAdmin(admin.ModelAdmin):
+    list_display = ("chat_id", "display_name", "chat_type", "is_active", "last_seen_at", "updated_at")
+    list_filter = ("is_active", "chat_type")
+    search_fields = ("chat_id", "title", "username", "first_name", "last_name")
+    readonly_fields = ("started_at", "last_seen_at", "updated_at")
+
+    @admin.display(description="Name")
+    def display_name(self, obj):
+        return obj.title or obj.username or " ".join([obj.first_name, obj.last_name]).strip()
 
 
 @admin.register(MarketQuote)

@@ -137,6 +137,12 @@ class MonitorSettings(models.Model):
     telegram_alerts_enabled = models.BooleanField("Telegram alerts enabled", default=False)
     telegram_bot_token = models.CharField("Telegram bot token", max_length=128, blank=True)
     telegram_chat_id = models.CharField("Telegram chat id", max_length=64, blank=True)
+    telegram_update_offset = models.BigIntegerField(
+        "Telegram update offset",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     telegram_summary_interval_minutes = models.PositiveIntegerField("Telegram summary interval minutes", default=5)
     telegram_last_summary_at = models.DateTimeField(
         "Telegram last summary at",
@@ -172,6 +178,26 @@ class MonitorSettings(models.Model):
     def mark_spread_synced(self, synced_at=None):
         self.last_spread_synced_at = synced_at or timezone.now()
         self.save(update_fields=["last_spread_synced_at"])
+
+
+class TelegramSubscriber(models.Model):
+    chat_id = models.CharField(max_length=64, unique=True)
+    chat_type = models.CharField(max_length=32, blank=True)
+    title = models.CharField(max_length=128, blank=True)
+    username = models.CharField(max_length=128, blank=True)
+    first_name = models.CharField(max_length=128, blank=True)
+    last_name = models.CharField(max_length=128, blank=True)
+    is_active = models.BooleanField(default=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["chat_id"]
+
+    def __str__(self):
+        label = self.title or self.username or self.first_name or self.chat_id
+        return f"{label} ({self.chat_id})"
 
 
 class MarketQuote(models.Model):

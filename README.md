@@ -41,7 +41,8 @@ The dashboard reads the latest stored quotes from PostgreSQL.
 Open `/admin/`, edit `Monitor settings`, and enable Telegram alerts.
 Every configured Telegram interval, the bot sends cards that are in `warning` or `danger`.
 
-Fill `Telegram bot token` and `Telegram chat id`.
+Fill `Telegram bot token`. Users can send `/start` to the bot to subscribe and `/stop` to unsubscribe.
+`Telegram chat id` is still supported as a fixed fallback recipient.
 
 ## Wallboard
 

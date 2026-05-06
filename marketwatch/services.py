@@ -17,7 +17,7 @@ from django.db import OperationalError, ProgrammingError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import GapSample, MarketQuote, MonitorCard, MonitorSettings
+from .models import GapSample, MarketQuote, MonitorCard, MonitorSettings, TelegramSubscriber
 
 
 BINANCE_URLS = [
@@ -58,6 +58,7 @@ def build_snapshot():
 
 def collect_market_snapshot():
     monitor_settings = _monitor_settings()
+    _sync_telegram_subscribers(monitor_settings)
     price_due = _sync_is_due(monitor_settings)
     spread_due = _spread_sync_is_due(monitor_settings)
     if not price_due and not spread_due:
@@ -890,7 +891,9 @@ def _quote_to_row(card, quote):
 def _send_periodic_telegram_summary(rows, monitor_settings, fetched_at):
     if not monitor_settings.pk or not monitor_settings.telegram_alerts_enabled:
         return
-    if not monitor_settings.telegram_bot_token or not monitor_settings.telegram_chat_id:
+    if not monitor_settings.telegram_bot_token:
+        return
+    if not _telegram_recipient_chat_ids(monitor_settings):
         return
     if not _telegram_summary_is_due(monitor_settings, fetched_at):
         return
@@ -947,14 +950,137 @@ def _send_telegram_summary_after_commit(monitor_settings_id, message, fetched_at
 
 
 def _send_telegram_alert(monitor_settings, message):
-    if not monitor_settings.telegram_bot_token or not monitor_settings.telegram_chat_id:
-        return
+    if not monitor_settings.telegram_bot_token:
+        return False
 
     url = f"https://api.telegram.org/bot{monitor_settings.telegram_bot_token}/sendMessage"
-    payload = urlencode({"chat_id": monitor_settings.telegram_chat_id, "text": message}).encode("utf-8")
+    sent = False
+    for chat_id in _telegram_recipient_chat_ids(monitor_settings):
+        payload = urlencode({"chat_id": chat_id, "text": message}).encode("utf-8")
+        request = Request(url, data=payload, headers={"User-Agent": "PriceMonitoring/1.0"})
+        try:
+            with urlopen(request, timeout=settings.PRICE_MONITOR["REQUEST_TIMEOUT_SECONDS"]):
+                sent = True
+        except Exception:
+            continue
+    return sent
+
+
+def _telegram_recipient_chat_ids(monitor_settings):
+    chat_ids = []
+    if monitor_settings.telegram_chat_id:
+        chat_ids.append(str(monitor_settings.telegram_chat_id).strip())
+
+    try:
+        chat_ids.extend(TelegramSubscriber.objects.filter(is_active=True).values_list("chat_id", flat=True))
+    except (OperationalError, ProgrammingError):
+        pass
+
+    seen = set()
+    recipients = []
+    for chat_id in chat_ids:
+        normalized = str(chat_id).strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        recipients.append(normalized)
+    return recipients
+
+
+def _sync_telegram_subscribers(monitor_settings):
+    if not monitor_settings.pk or not monitor_settings.telegram_bot_token:
+        return
+
+    params = {
+        "timeout": 0,
+        "allowed_updates": json.dumps(["message"]),
+    }
+    if monitor_settings.telegram_update_offset is not None:
+        params["offset"] = monitor_settings.telegram_update_offset + 1
+
+    response = _telegram_api_request(monitor_settings.telegram_bot_token, "getUpdates", params)
+    if not response or not response.get("ok"):
+        return
+
+    updates = response.get("result", [])
+    max_update_id = monitor_settings.telegram_update_offset
+    for update in updates:
+        update_id = update.get("update_id")
+        if update_id is not None:
+            max_update_id = max(max_update_id or update_id, update_id)
+        _handle_telegram_update(monitor_settings, update)
+
+    if max_update_id is not None and max_update_id != monitor_settings.telegram_update_offset:
+        monitor_settings.telegram_update_offset = max_update_id
+        monitor_settings.save(update_fields=["telegram_update_offset"])
+
+
+def _handle_telegram_update(monitor_settings, update):
+    message = update.get("message") or {}
+    chat = message.get("chat") or {}
+    chat_id = chat.get("id")
+    if chat_id is None:
+        return
+
+    text = str(message.get("text") or "").strip().lower()
+    if not text.startswith(("/start", "/stop")):
+        return
+
+    chat_id = str(chat_id)
+    now = timezone.now()
+    defaults = {
+        "chat_type": str(chat.get("type") or ""),
+        "title": str(chat.get("title") or ""),
+        "username": str(chat.get("username") or ""),
+        "first_name": str(chat.get("first_name") or ""),
+        "last_name": str(chat.get("last_name") or ""),
+        "last_seen_at": now,
+    }
+
+    try:
+        if text.startswith("/stop"):
+            subscriber, _ = TelegramSubscriber.objects.update_or_create(
+                chat_id=chat_id,
+                defaults={**defaults, "is_active": False},
+            )
+            _send_telegram_message(monitor_settings.telegram_bot_token, subscriber.chat_id, "Price Monitoring alerts stopped.")
+            return
+
+        subscriber, _ = TelegramSubscriber.objects.update_or_create(
+            chat_id=chat_id,
+            defaults={**defaults, "is_active": True},
+        )
+    except (OperationalError, ProgrammingError):
+        return
+
+    _send_telegram_message(
+        monitor_settings.telegram_bot_token,
+        subscriber.chat_id,
+        "Price Monitoring alerts enabled. Send /stop to disable alerts.",
+    )
+
+
+def _send_telegram_message(bot_token, chat_id, message):
+    if not bot_token or not chat_id:
+        return False
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = urlencode({"chat_id": chat_id, "text": message}).encode("utf-8")
     request = Request(url, data=payload, headers={"User-Agent": "PriceMonitoring/1.0"})
     try:
         with urlopen(request, timeout=settings.PRICE_MONITOR["REQUEST_TIMEOUT_SECONDS"]):
             return True
     except Exception:
         return False
+
+
+def _telegram_api_request(bot_token, method, params):
+    if not bot_token:
+        return None
+    url = f"https://api.telegram.org/bot{bot_token}/{method}"
+    payload = urlencode(params).encode("utf-8")
+    request = Request(url, data=payload, headers={"User-Agent": "PriceMonitoring/1.0"})
+    try:
+        with urlopen(request, timeout=settings.PRICE_MONITOR["REQUEST_TIMEOUT_SECONDS"]) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except Exception:
+        return None
