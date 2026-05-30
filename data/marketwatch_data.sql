@@ -131,7 +131,7 @@ INSERT INTO public.marketwatch_monitorcard (id, symbol, reference_exchange, comp
 -- Data for Name: marketwatch_monitorsettings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.marketwatch_monitorsettings (id, sync_interval_minutes, last_synced_at, updated_at, telegram_alerts_enabled, telegram_bot_token, telegram_chat_id, telegram_last_summary_at, telegram_summary_interval_minutes, sync_interval_seconds, bitbank_spread_interval_seconds, last_spread_synced_at) VALUES (1, 1, '2026-05-30 06:32:58.455145+00', '2026-05-17 08:27:48.166615+00', true, '', '', '2026-05-30 06:32:37.453443+00', 2, 20, 5, '2026-05-30 06:33:09.459088+00');
+INSERT INTO public.marketwatch_monitorsettings (id, sync_interval_minutes, last_synced_at, updated_at, telegram_alerts_enabled, telegram_bot_token, telegram_chat_id, telegram_last_summary_at, telegram_summary_interval_minutes, sync_interval_seconds, bitbank_spread_interval_seconds, last_spread_synced_at) VALUES (1, 1, '2026-05-30 06:32:58.455145+00', '2026-05-17 08:27:48.166615+00', true, '', '-1003920033454', '2026-05-30 06:32:37.453443+00', 2, 20, 5, '2026-05-30 06:33:09.459088+00');
 
 
 --
